@@ -46,6 +46,7 @@ package game.listeners.game
 		{
 			Main.instance.setScoreVisible(false);
 			Main.appendMessage("Emotion selected: " + (screen as EmotionRateScreen).selectedEmotion);
+//			Main.appendMessage("Actual Emotion: "+ screen.video1.emotionType);
 			screen.soundChannel.stop();	
 			//TODO check the answer with the passed correct answer
 			
@@ -65,7 +66,7 @@ package game.listeners.game
 					{
 						greatJobScreen = new Screen(Images.getInstance().imagePoint3, Sounds.getInstance().soundPoint3);
 					}
-					else if (screen.video1.numberOfTries == 2)
+					else // (screen.video1.numberOfTries == 2)
 					{
 						greatJobScreen = new Screen(Images.getInstance().imagePoint1, Sounds.getInstance().soundPoint1);
 					}
@@ -105,6 +106,7 @@ package game.listeners.game
 				}
 				else
 				{ //No more tries left
+					Main.appendMessage("ImageEmotion:" + imageForEmotionType[screen.video1.emotionType]+", Sound: "+soundForEmotionType[screen.video1.emotionType]);
 					wrongAnwserScreen = new Screen(imageForEmotionType[screen.video1.emotionType], soundForEmotionType[screen.video1.emotionType]);	
 					wrongAnwserScreen.addEventListener(Event.ADDED, new ShowCorrectAnswerListener(wrongAnwserScreen).loaded);
 				}

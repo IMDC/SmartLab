@@ -22,6 +22,8 @@ package game.gui.screens
 		
 		public function Screen(image:Bitmap=null, sound:Sound=null)
 		{
+			Main.appendMessage("Image: "+image);
+			Main.appendMessage("Sound: "+sound);
 			this.image = image;
 			this.sound = sound;
 			if (this.image!=null)
