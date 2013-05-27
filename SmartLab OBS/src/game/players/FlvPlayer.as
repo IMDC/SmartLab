@@ -106,7 +106,7 @@ package game.players
 					case "NetStream.Play.Stop" :
 						//stream.dispatchEvent(new Event("end of video"));
 						//event.target.dispatchEvent(new Event("end of video"));
-						event.target.seek(0);
+					//	event.target.seek(0);
 						event.target.pause();					
 						this.dispatchEvent(new Event(END_OF_VIDEO_EVENT));
 						//stream.seek(0);

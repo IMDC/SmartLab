@@ -33,7 +33,7 @@ package game.listeners.game
 		override public function videoEnded(event:Event):void
 		{	
 			Main.appendMessage("Playback done");
-			(screen as VideoPerformancePlaybackScreen).videoPlayer1.removeEventListener(FlvPlayer.END_OF_VIDEO_EVENT, videoEnded);
+			(screen as VideoPlaybackScreen).videoPlayer.removeEventListener(FlvPlayer.END_OF_VIDEO_EVENT, videoEnded);
 			var feedBackScreen:Screen;
 			feedBackScreen = new Screen(Images.getInstance().imageFeedback6, Sounds.getInstance().soundFeedback6);
 			feedBackScreen.video1 = screen.video1;
