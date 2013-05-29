@@ -53,13 +53,13 @@ package game.listeners.game
 			Main.instance.cameraControlsListener.addEventListener(RecordingEvent.EVENT_RECORDING_STOPPED, recordingStopped);
 			Main.instance.cameraControlsListener.addEventListener(RecordingEvent.EVENT_TRANSCODING_FINISHED, transcodingFinished);
 			Main.instance.cameraControlsListener.record();
-			(screen as VideoPlaybackScreen).videoPlayer.resume();
+//			(screen as VideoPlaybackScreen).videoPlayer.resume();
 		}
 		
 		public function recordingStarted(event:RecordingEvent):void
 		{
 			Main.instance.cameraControlsListener.removeEventListener(RecordingEvent.EVENT_RECORDING_STARTED, recordingStarted);
-//			(screen as VideoPlaybackScreen).videoPlayer.resume();
+			(screen as VideoPlaybackScreen).videoPlayer.resume();
 		}
 		
 		
