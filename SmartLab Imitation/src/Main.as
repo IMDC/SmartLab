@@ -63,6 +63,7 @@ package
 		public static const EVENT_CONNECTED:String = "Connected to server";
 		
 		private var finalData:String = "";
+		private var currentVideoData:String = "";
 		
 		private var saveDataResponder:Responder;
 		public static const EVENT_VIDEOS_LOADED:String = "Videos for day loaded";
@@ -137,7 +138,17 @@ package
 
 		public function addVideoData(videoNumber:Number, originalVideoURL:String, trialNumber:Number, responseVideoURL:String, videoEmotion:String, responseEmotion:String, responseEmotionIntensity:Number = -1):void
 		{
+			currentVideoData = ""+videoNumber+"\t"+originalVideoURL+"\t" +trialNumber+"\t" +responseVideoURL+"\t"+videoEmotion+"\t"+responseEmotion+"\t" +responseEmotionIntensity;
 			finalData+=""+videoNumber+"\t"+originalVideoURL+"\t" +trialNumber+"\t" +responseVideoURL+"\t"+videoEmotion+"\t"+responseEmotion+"\t" +responseEmotionIntensity +"\n";
+			this.addEventListener(EVENT_CONNECTED, connectedToSavePartialData);
+			this.connect();
+		}
+		
+		private function connectedToSavePartialData(event:Event):void
+		{
+			this.removeEventListener(EVENT_CONNECTED, connectedToSavePartialData);
+			appendMessage("Saving Data");
+			Main.instance.netConnection.call("savePartialDayData",saveDataResponder, ""+participantID, ""+day, ""+currentVideoData, configurationVariables["email"]);
 		}
 		
 		public function saveData():void
@@ -150,6 +161,7 @@ package
 		
 		private function connectedToSave(event:Event):void
 		{
+			this.removeEventListener(EVENT_CONNECTED, connectedToSavePartialData);
 			appendMessage("Saving Data");
 			Main.instance.netConnection.call("saveDayData",saveDataResponder, ""+participantID, ""+day, ""+finalData, configurationVariables["email"]);
 		}

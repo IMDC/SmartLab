@@ -96,6 +96,7 @@ package game.players
 						break;
 					case "NetStream.Play.StreamNotFound" :	// this needs to be handled with an event listener
 						Main.appendMessage("Unable to locate video: " + flvUrl);
+						this.dispatchEvent(new Event("stream.notFound"));
 						break;
 					case "NetStream.Play.Start" :
 						//stream.play(flvUrl);
@@ -186,6 +187,7 @@ package game.players
 			private function asyncErrorHandler(event:AsyncErrorEvent):void 
 			{
 				// ignore AsyncErrorEvent events.
+				Main.appendMessage("AsyncError!" + event.error.message);
 				connection.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
 				stream.removeEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
 				stream.close();

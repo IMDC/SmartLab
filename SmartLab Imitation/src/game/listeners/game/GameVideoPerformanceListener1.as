@@ -37,6 +37,7 @@ package game.listeners.game
 			(screen as VideoPerformancePlaybackScreen).videoPlayer1.addEventListener(ProgressEvent.PROGRESS, onProgress1);
 			(screen as VideoPerformancePlaybackScreen).videoPlayer2.addEventListener("buffer.empty", bufferEmpty2);
 			(screen as VideoPerformancePlaybackScreen).videoPlayer2.addEventListener("buffer.full", bufferFull2);
+			(screen as VideoPerformancePlaybackScreen).videoPlayer2.addEventListener("stream.notFound", streamNotFound);
 			(screen as VideoPerformancePlaybackScreen).videoPlayer2.addEventListener(ProgressEvent.PROGRESS, onProgress2);
 			Main.appendMessage("Registered listeners");
 			(screen as VideoPerformancePlaybackScreen).videoPlayer2.resume();
@@ -44,6 +45,12 @@ package game.listeners.game
 			(screen as VideoPerformancePlaybackScreen).videoPlayer1.resume();
 			(screen as VideoPerformancePlaybackScreen).videoPlayer1.pause();
 			
+			
+		}
+		
+		private function streamNotFound(event:Event):void
+		{
+			(screen as VideoPerformancePlaybackScreen).videoPlayer1.resume();
 			
 		}
 		
