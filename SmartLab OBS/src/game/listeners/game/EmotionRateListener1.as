@@ -63,7 +63,7 @@ package game.listeners.game
 					{
 						greatJobScreen = new Screen(Images.getInstance().imagePoint5, Sounds.getInstance().soundPoint5);
 					}
-					if (screen.video1.numberOfTries == 1)
+					else if (screen.video1.numberOfTries == 1)
 					{
 						greatJobScreen = new Screen(Images.getInstance().imagePoint3, Sounds.getInstance().soundPoint3);
 					}
