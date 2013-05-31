@@ -162,6 +162,11 @@ package game.listeners
 						Main.instance.day = Number(Main.configurationVariables["day"]);	
 						Main.appendMessage("Else Current day for participant " + Main.instance.participantID+ " is " + Number(Main.configurationVariables["day"]));
 						this.screen.removeChild(loginSprite);
+						if (Main.configurationVariables["type"] == "speech")
+						{
+							(this.screen as WelcomeScreen).videoType = Video.TYPE_SPEECH;
+							(this.screen as WelcomeScreen).videoTypeLabel.text = ""+videoType +" videos";
+						}
 //						loadChooseOptionsState();
 					}
 				}

@@ -93,8 +93,9 @@ package game.listeners.game
 			{
 				//Wrong answer - deduct the number of tries and redirect to the appropriate screen
 				var wrongAnwserScreen:Screen;
-				Main.instance.addVideoData(Main.instance.videoNumber, screen.video1.url, screen.video1.numberOfTries, screen.video2, screen.video1.emotionType, (screen as EmotionRateScreen).selectedEmotion); 
 				screen.video1.numberOfTries++;
+				Main.instance.addVideoData(Main.instance.videoNumber, screen.video1.url, screen.video1.numberOfTries, screen.video2, screen.video1.emotionType, (screen as EmotionRateScreen).selectedEmotion); 
+				
 				if (screen.video1.numberOfTries == 1)
 				{
 					wrongAnwserScreen = new Screen(Images.getInstance().imageTryAgain2, Sounds.getInstance().soundTriesLeft2);

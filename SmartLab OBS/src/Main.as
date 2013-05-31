@@ -98,6 +98,7 @@ package
 			configurationVariables["elementID"] = "playerContent";
 			configurationVariables["jsObj"] = "controls";
 			configurationVariables["day"] = -1;
+			configurationVariables["type"] = "";
 			configurationVariables["email"] = "mgerdzhe@ryerson.ca";
 			//			configurationVariables["blurFunction"] = "setBlur";
 			//			configurationVariables["blurFunctionText"] = "setBlurText";
@@ -162,7 +163,7 @@ package
 		private function connectedToSave(event:Event):void
 		{
 			appendMessage("Saving Data");
-			Main.instance.netConnection.call("saveDayData",saveDataResponder, ""+participantID, ""+day, ""+finalData, configurationVariables["email"]);
+			Main.instance.netConnection.call("saveDayData",saveDataResponder, ""+participantID, ""+day+configurationVariables["type"], ""+finalData, configurationVariables["email"]);
 		}
 		
 		public function saveDataSuccess(obj:Object):void
@@ -283,7 +284,8 @@ package
 				speechVideosArray = randomizeArray(speechVideosArray);
 				if (myXML.song==null)
 					currentVideoArray = speechVideosArray;
-				
+				if (configurationVariables["type"] == "speech")
+					currentVideoArray = speechVideosArray;
 			}
 			this.dispatchEvent(new Event(EVENT_VIDEOS_LOADED));
 		}
