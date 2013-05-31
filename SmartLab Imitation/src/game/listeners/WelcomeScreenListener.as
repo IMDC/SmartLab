@@ -138,7 +138,7 @@ package game.listeners
 		
 		private function displayThings(event:Event):void
 		{
-			Main.appendMessage(""+Main.instance.songVideosArray.length);
+			Main.appendMessage("Song Videos: "+Main.instance.songVideosArray.length);
 			if (Main.instance.songVideosArray.length==0)
 			{
 				(screen as WelcomeScreen).videoType = Video.TYPE_SPEECH;
@@ -163,6 +163,12 @@ package game.listeners
 						Main.instance.day = Number(Main.configurationVariables["day"]);	
 						Main.appendMessage("Else Current day for participant " + Main.instance.participantID+ " is " + Number(Main.configurationVariables["day"]));
 						this.screen.removeChild(loginSprite);
+						if (Main.configurationVariables["type"] == "speech")
+						{
+							Main.appendMessage("Starting speech videos");
+							(this.screen as WelcomeScreen).videoType = Video.TYPE_SPEECH;
+							(this.screen as WelcomeScreen).videoTypeLabel.text = ""+Video.TYPE_SPEECH +" videos";
+						}
 //						loadChooseOptionsState();
 					}
 				}
