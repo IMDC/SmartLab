@@ -5,6 +5,7 @@ package
 	import flash.display.StageAlign;
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
+	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
 	import flash.external.ExternalInterface;
 	import flash.net.NetConnection;
@@ -69,6 +70,8 @@ package
 		public static const EVENT_VIDEOS_LOADED:String = "Videos for day loaded";
 		
 		private var loadingLabel:TextField;
+		
+		private var myTextLoader:URLLoader = new URLLoader();
 		
 		public function Main()
 		{
@@ -136,6 +139,62 @@ package
 		{
 			_songVideosArray = value;
 		}
+		
+		private function resumeGame(day:Number):void
+		{
+			//If the game was interrupted, resume it.
+			//get the partial file of trials and parse it.
+			myTextLoader.addEventListener(Event.COMPLETE, onPartialFileLoaded);
+			myTextLoader.addEventListener(IOErrorEvent.IO_ERROR, partialFileNotFound);
+			myTextLoader.load(new URLRequest("http://imdc.ca/~martin/smartlab/streams/"+participantID+"/day"+day+"partial.txt"));
+			
+//			/"http://imdc.ca/~martin/smartlab/resources/input/day"+day+".xml");
+		}
+		
+		private function onPartialFileLoaded(e:Event):void
+		{
+			finalData = e.target.data;
+			var myArrayOfLines:Array = e.target.data.split(/\n/);
+			var videoURLArray:Array = new Array();
+			for (var i:uint=0;i<myArrayOfLines.length-1;i++)
+			{
+				var videoURl:String = ((myArrayOfLines[i] as String).split(/\t/)[1] as String);
+				videoURLArray.push(videoURl);	
+				appendMessage("Found previous video "+videoURl);
+			} 
+			//subtract the found videos from the current list of videos.
+			for (var j:uint=0;j<videoURLArray.length;j++)
+			{
+				appendMessage("Removing video "+videoURLArray[j]);
+				if (!removeVideoFromArray(songVideosArray, videoURLArray[j]))						
+					removeVideoFromArray(speechVideosArray, videoURLArray[j]);
+			}
+			if (songVideosArray.length>0)
+				currentVideoArray = songVideosArray;
+			else
+				currentVideoArray = speechVideosArray;
+			this.dispatchEvent(new Event(EVENT_VIDEOS_LOADED));
+			
+		}
+		private function removeVideoFromArray(a:Array, v:String):Boolean
+		{
+			for (var i:uint=0;i<a.length;i++)
+			{
+				if ((a[i] as Video).url == v)
+				{
+					appendMessage((a[i] as Video).url +" == "+v);
+					a.splice(i,1);
+					appendMessage("Removed video "+v);
+					return true;
+				}
+			}
+			return false;
+		}
+		private function partialFileNotFound(e:IOErrorEvent):void
+		{
+			appendMessage("No partial file found, start fresh for the day!");	
+			this.dispatchEvent(new Event(EVENT_VIDEOS_LOADED));
+		}
 
 		public function addVideoData(videoNumber:Number, originalVideoURL:String, trialNumber:Number, responseVideoURL:String, videoEmotion:String, responseEmotion:String, responseEmotionIntensity:Number = -1):void
 		{
@@ -149,7 +208,7 @@ package
 		{
 			this.removeEventListener(EVENT_CONNECTED, connectedToSavePartialData);
 			appendMessage("Saving Data");
-			Main.instance.netConnection.call("savePartialDayData",saveDataResponder, ""+participantID, ""+day, ""+currentVideoData, configurationVariables["email"]);
+			Main.instance.netConnection.call("savePartialDayData",saveDataResponder, ""+participantID, ""+day+"partial", ""+currentVideoData, configurationVariables["email"]);
 		}
 		
 		public function saveData():void
@@ -289,7 +348,7 @@ package
 					currentVideoArray = speechVideosArray;
 				
 			}
-			this.dispatchEvent(new Event(EVENT_VIDEOS_LOADED));
+			resumeGame(day);
 		}
 		
 		public static function randomizeArray(array:Array):Array
