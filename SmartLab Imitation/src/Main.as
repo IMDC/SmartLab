@@ -184,6 +184,7 @@ package
 				{
 					appendMessage((a[i] as Video).url +" == "+v);
 					a.splice(i,1);
+					videoNumber++;
 					appendMessage("Removed video "+v);
 					return true;
 				}
@@ -223,7 +224,7 @@ package
 		{
 			this.removeEventListener(EVENT_CONNECTED, connectedToSavePartialData);
 			appendMessage("Saving Data");
-			Main.instance.netConnection.call("saveDayData",saveDataResponder, ""+participantID, ""+day+configurationVariables["type"], ""+finalData, configurationVariables["email"]);
+			Main.instance.netConnection.call("saveDayData",saveDataResponder, ""+participantID, ""+day, ""+finalData, configurationVariables["email"]);
 		}
 		
 		public function saveDataSuccess(obj:Object):void
