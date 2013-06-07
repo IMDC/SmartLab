@@ -153,6 +153,7 @@ package recorder.model
 			if (camera==null)
 			{
 				Main.appendMessage("Camera is in use in another application");
+				Main.displayPopup("Camera is in use in another application");
 				return;
 			}
 			Main.appendMessage("Setting up camera:"+camera.name);
@@ -178,6 +179,7 @@ package recorder.model
 			if (microphone==null)
 			{
 				Main.appendMessage("Microphone is in use in another application");
+				Main.displayPopup("Microphone is in use in another application");
 				return;
 			}
 			microphone.addEventListener(StatusEvent.STATUS, microphoneStatusHandler); 
@@ -197,6 +199,7 @@ package recorder.model
 			else if (Camera.names.length == 0)
 			{ 
 				Main.appendMessage("No camera Found");
+				Main.displayPopup("No camera Found! Plug in a camera and reload the page");
 				cameraPresent = false;
 			}
 			else
@@ -217,6 +220,7 @@ package recorder.model
 			else if (Microphone.names.length == 0)
 			{ 
 				Main.appendMessage("No microphones Found");
+				Main.displayPopup("No microphone Found! Plug in a microphone and reload the page");
 				microphonePresent = false;
 			}
 			else
@@ -373,6 +377,7 @@ package recorder.model
 				cameraAccess = false;
 				this.dispatchEvent(new CameraReadyEvent(CAMERA_READY_STRING, camera));
 				Main.appendMessage("User prevented access to camera");
+				Main.displayPopup("Camera/Microphone access is required for this application, reload the page and allow camera/microphone access");
 				//No camera Access
 			//	selectCamera();
 			} 

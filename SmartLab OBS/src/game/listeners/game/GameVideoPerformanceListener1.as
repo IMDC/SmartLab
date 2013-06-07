@@ -21,6 +21,12 @@ package game.listeners.game
 			super(screen);
 			Main.appendMessage("GameVideoPerformanceListener1");
 			(screen as VideoPlaybackScreen).videoPlayer.addEventListener(FlvPlayer.END_OF_VIDEO_EVENT, videoEnded);
+			(screen as VideoPlaybackScreen).videoPlayer.addEventListener("stream.notFound", streamNotFound);
+		}
+		
+		private function streamNotFound(event:Event):void
+		{
+			Main.displayPopup("Cannot connect to server, please check your internet connection and reload the page");
 		}
 		
 		override public function loaded(event:Event):void
