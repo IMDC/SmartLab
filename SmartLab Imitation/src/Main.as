@@ -7,6 +7,7 @@ package
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.NetStatusEvent;
+	import flash.events.TimerEvent;
 	import flash.external.ExternalInterface;
 	import flash.net.NetConnection;
 	import flash.net.ObjectEncoding;
@@ -19,6 +20,7 @@ package
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.ui.ContextMenu;
+	import flash.utils.Timer;
 	
 	import game.assets.Images;
 	import game.assets.Sounds;
@@ -73,6 +75,8 @@ package
 		
 		private var myTextLoader:URLLoader = new URLLoader();
 		
+		private var reconnectTimer:Timer;
+		
 		public function Main()
 		{
 			
@@ -83,6 +87,10 @@ package
 			configurationVariables = new Array();
 			songVideosArray = new Array();
 			speechVideosArray = new Array();
+			
+			reconnectTimer = new Timer(5000,5);
+			reconnectTimer.addEventListener(TimerEvent.TIMER, timerConnect);
+			reconnectTimer.addEventListener(TimerEvent.TIMER_COMPLETE, timerCannotConect);
 			
 			
 			configurationVariables["width"] = 720;
@@ -146,7 +154,7 @@ package
 			//get the partial file of trials and parse it.
 			myTextLoader.addEventListener(Event.COMPLETE, onPartialFileLoaded);
 			myTextLoader.addEventListener(IOErrorEvent.IO_ERROR, partialFileNotFound);
-			myTextLoader.load(new URLRequest("http://imdc.ca/~martin/smartlab/streams/"+participantID+"/day"+day+"partial.txt"));
+			myTextLoader.load(new URLRequest("http://imdc.ca/~martin/smartlab/streams/"+participantID+"/day"+day+"partial.txt?nocache="+Math.random()));
 			
 //			/"http://imdc.ca/~martin/smartlab/resources/input/day"+day+".xml");
 		}
@@ -156,9 +164,22 @@ package
 			finalData = e.target.data;
 			var myArrayOfLines:Array = e.target.data.split(/\n/);
 			var videoURLArray:Array = new Array();
-			for (var i:uint=0;i<myArrayOfLines.length-1;i++)
+			for (var i:uint=0;i<myArrayOfLines.length;i++)
 			{
-				var videoURl:String = ((myArrayOfLines[i] as String).split(/\t/)[1] as String);
+				if ((myArrayOfLines[i] as String).length<5)
+					break;
+				var tabbedArray:Array = (myArrayOfLines[i] as String).split(/\t/);
+				if (tabbedArray[4]==tabbedArray[5])
+				{
+					//Correct answer
+					if (tabbedArray[2]== "0")
+						score+=5;
+					else if (tabbedArray[2]== "1")
+						score+=3;
+					else if (tabbedArray[2]== "2")
+						score+=1;
+				}
+				var videoURl:String = (tabbedArray[1] as String);
 				videoURLArray.push(videoURl);	
 				appendMessage("Found previous video "+videoURl);
 			} 
@@ -174,6 +195,7 @@ package
 			else
 				currentVideoArray = speechVideosArray;
 			this.dispatchEvent(new Event(EVENT_VIDEOS_LOADED));
+			appendMessage("Total score: "+score);
 			
 		}
 		private function removeVideoFromArray(a:Array, v:String):Boolean
@@ -527,6 +549,18 @@ package
 			
 		}
 		
+		private function timerConnect(event:TimerEvent):void
+		{
+			connect();
+		}
+		
+		private function timerCannotConect(event:TimerEvent):void
+		{
+			reconnectTimer.reset();
+			appendMessage("Connection cannot be established");
+			displayPopup("Cannot connect to server, please check your internet connection and reload the page");
+		}
+		
 		private function netStatus(event:NetStatusEvent):void
 		{
 			appendMessage(event.info.code);
@@ -534,6 +568,7 @@ package
 			{
 				//trace reject message
 				appendMessage("Connected Failed. Reason:" +event.info.application);
+				reconnectTimer.start();
 				return;
 			}
 			if (event.info.code=="NetConnection.Connect.Rejected")
@@ -545,6 +580,7 @@ package
 			if (event.info.code=="NetConnection.Connect.Success")
 			{
 				appendMessage("Connected to server");
+				reconnectTimer.reset();
 				onConnection();
 			}
 			if (event.info.code=="NetConnection.Connect.Closed")
@@ -587,6 +623,11 @@ package
 			{	
 				ExternalInterface.call("console.log","FLASH MESSAGE:"+message);
 			}
+		}
+		
+		public static function displayPopup(message:String):void
+		{
+			ExternalInterface.call("alert",""+message);
 		}
 		
 		public function initFlashVars():void

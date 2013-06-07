@@ -175,6 +175,7 @@ package game.listeners
 				else
 				{
 					Main.appendMessage("Could not connect!!!");
+					Main.displayPopup("Could not connect to the server. Please check your internet connection and reload the page");
 				}
 			}
 			else

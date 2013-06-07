@@ -50,8 +50,8 @@ package game.listeners.game
 		
 		private function streamNotFound(event:Event):void
 		{
-			(screen as VideoPerformancePlaybackScreen).videoPlayer1.resume();
-			
+			//(screen as VideoPerformancePlaybackScreen).videoPlayer1.resume();
+			Main.displayPopup("Cannot connect to server, please check your internet connection and reload the page");
 		}
 		
 		private function onProgress1(event:ProgressEvent):void
