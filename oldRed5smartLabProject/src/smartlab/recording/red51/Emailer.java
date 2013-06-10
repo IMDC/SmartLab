@@ -1,4 +1,4 @@
-package smartlab.recording.red5;
+package smartlab.recording.red51;
 
 import java.io.FileInputStream;
 import java.io.IOException;

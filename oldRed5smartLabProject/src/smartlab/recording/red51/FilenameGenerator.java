@@ -1,4 +1,4 @@
-package smartlab.recording.red5;
+package smartlab.recording.red51;
 
 import org.red5.server.api.IScope;
 import org.red5.server.api.ScopeUtils;

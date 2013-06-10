@@ -20,14 +20,14 @@
 	</bean>
 
 	<bean id="web.handler" 
-	    class="smartlab.recording.red5.Application" 
+	    class="smartlab.recording.red51.Application" 
 		singleton="true" >
 		<property name="FFMPEG">
 			<value>/usr/local/bin/ffmpeg</value>
 		</property>	
 	</bean>
 
-	<bean id="streamFilenameGenerator" class="smartlab.recording.red5.FilenameGenerator">
+	<bean id="streamFilenameGenerator" class="smartlab.recording.red51.FilenameGenerator">
 	<property name="playbackPath">
             <value>/home/martin/public_html/smartlab/streams/</value>
     </property>

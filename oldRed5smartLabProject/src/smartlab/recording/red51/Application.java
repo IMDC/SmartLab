@@ -1,4 +1,4 @@
-package smartlab.recording.red5;
+package smartlab.recording.red51;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,8 +36,10 @@ public class Application extends ApplicationAdapter
 	private static String						FFMPEG					= "/var/www/include/ffmpeg/ffmpeg";
 	private static final int					AUDIO_RECORDING			= 0;
 	private static final int					CAMERA_RECORDING		= 1;
+	private static final int					COMBINED_RECORDING		= 2;
 	public static final String					SUFFIX_AUDIO			= "_audio";
 	public static final String					SUFFIX_VIDEO			= "_video";
+	public static final String					SUFFIX_COMBINED			= "_combined";
 
 	public static final String					OUTPUT_TYPE_H264		= "mp4";
 	public static final String					OUTPUT_TYPE_WEBM		= "webm";
@@ -175,9 +177,11 @@ public class Application extends ApplicationAdapter
 		String suffix;
 		final String file;
 		if (type == CAMERA_RECORDING)
-			suffix = "_video";
+			suffix = SUFFIX_VIDEO;
+		else if (type == AUDIO_RECORDING)
+			suffix = SUFFIX_AUDIO;
 		else
-			suffix = "_audio";
+			suffix = SUFFIX_COMBINED;
 		streamName += suffix;
 		file = streamName + "_" + System.currentTimeMillis();
 		try
@@ -222,9 +226,11 @@ public class Application extends ApplicationAdapter
 		IConnection conn = Red5.getConnectionLocal();
 		String suffix;
 		if (type == CAMERA_RECORDING)
-			suffix = "_video";
+			suffix = SUFFIX_VIDEO;
+		else if (type == AUDIO_RECORDING)
+			suffix = SUFFIX_AUDIO;
 		else
-			suffix = "_audio";
+			suffix = SUFFIX_COMBINED;
 		streamName += suffix;
 		IScope scope = getRecordingScope(conn, streamName);
 		if (scope == null)
@@ -293,7 +299,7 @@ public class Application extends ApplicationAdapter
 		}
 		else
 		{
-			//number++;
+			// number++;
 			while ((f = new File(FilenameGenerator.recordPath + participantId + File.separator + "day" + number
 					+ ".txt")).exists())
 			{
@@ -322,16 +328,17 @@ public class Application extends ApplicationAdapter
 			writer.close();
 		}
 		Emailer emailer = new Emailer();
-		emailer.sendEmail("smartlabgame@imdc.ca", emailAddress, "Participant "+participantId+" day " +day+" data", data);
+		emailer.sendEmail("smartlabgame@imdc.ca", emailAddress, "Participant " + participantId + " day " + day
+				+ " data", data);
 	}
-	
+
 	public void savePartialDayData(String participantId, String day, String data, String emailAddress)
 	{
 		File f = new File(FilenameGenerator.recordPath + participantId + File.separator + "day" + day + ".txt");
 		PrintWriter writer = null;
 		try
 		{
-			writer = new PrintWriter(new FileWriter(f,true));
+			writer = new PrintWriter(new FileWriter(f, true));
 			writer.println(data);
 		}
 		catch (FileNotFoundException e)
@@ -350,19 +357,23 @@ public class Application extends ApplicationAdapter
 	}
 
 	public String transcodeVideo(String streamName, long audioDelay, String type, String participantId, String day,
-			String video, String video_trial)
+			String video, String video_trial, boolean combined)
 	{
 		String fileName = null;
 		// FIXME make it so that it can work if I am recording only audio or
 		// only video
 		String audioFileString = getFileFromStream(streamName + SUFFIX_AUDIO);
 		String videoFileString = getFileFromStream(streamName + SUFFIX_VIDEO);
+		String combinedFileString = getFileFromStream(streamName + SUFFIX_COMBINED);
 		String[] outputFFMPEG;
 		String[] inputFFMPEG;
 		File newFile = null;
 		if (type.equals(OUTPUT_TYPE_H264))
 		{
-			fileName = videoFileString.substring(0, videoFileString.indexOf("_")) + ".mp4";
+			if (combined)
+				fileName = combinedFileString.substring(0, combinedFileString.indexOf("_")) + ".mp4";
+			else
+				fileName = videoFileString.substring(0, videoFileString.indexOf("_")) + ".mp4";
 			newFile = new File(FilenameGenerator.recordPath + participantId + File.separator + day + File.separator
 					+ "video" + video + "_" + "_trial" + video_trial + "_" + fileName);
 			if (!newFile.getParentFile().exists())
@@ -374,31 +385,39 @@ public class Application extends ApplicationAdapter
 			return null;
 		File audioFile = new File(FilenameGenerator.recordPath + audioFileString);
 		File videoFile = new File(FilenameGenerator.recordPath + videoFileString);
+		File combinedFile = new File(FilenameGenerator.recordPath + combinedFileString);
 		ProcessBuilder p;
 		// MUST transcode to the appropriate video/audio codec
-		if (audioDelay < 0)
-		{ // must delay the audio
-			audioDelay *= -1;
-			String time = parseFFMPEGTime(audioDelay);
-			inputFFMPEG = new String[] { FFMPEG, "-i", videoFile.getAbsolutePath(), "-itsoffset", time, "-i",
-					audioFile.getAbsolutePath(), "-map", "0:0", "-map", "1:1" };
-			// p = new ProcessBuilder(FFMPEG, "-i", videoFile.getAbsolutePath(),
-			// "-itsoffset", time, "-i", audioFile.getAbsolutePath(),
-			// "-map", "0:0", "-map", "1:1", "-vcodec", "copy", "-acodec",
-			// "libfaac", "-ar", "22050", "-ab", "64000", "-ac", "1",
-			// newFile.getAbsolutePath());
+		if (combined)
+		{
+			inputFFMPEG = new String[] { FFMPEG, "-i", combinedFile.getAbsolutePath() };
 		}
 		else
-		{ // must delay the video
-	//		audioDelay *= -1;
-			String time = parseFFMPEGTime(audioDelay);
-			inputFFMPEG = new String[] { FFMPEG, "-i", audioFile.getAbsolutePath(), "-itsoffset", time, "-i",
-					videoFile.getAbsolutePath(), "-map", "1:0", "-map", "0:1" };
-			// p = new ProcessBuilder(FFMPEG, "-i", audioFile.getAbsolutePath(),
-			// "-itsoffset", time, "-i", videoFile.getAbsolutePath(),
-			// "-map", "1:0", "-map", "0:1", "-vcodec", "copy", "-acodec",
-			// "libfaac", "-ar", "22050", "-ab", "64000", "-ac", "1",
-			// newFile.getAbsolutePath());
+		{
+			if (audioDelay < 0)
+			{ // must delay the audio
+				audioDelay *= -1;
+				String time = parseFFMPEGTime(audioDelay);
+				inputFFMPEG = new String[] { FFMPEG, "-i", videoFile.getAbsolutePath(), "-itsoffset", time, "-i",
+						audioFile.getAbsolutePath(), "-map", "0:0", "-map", "1:1" };
+				// p = new ProcessBuilder(FFMPEG, "-i", videoFile.getAbsolutePath(),
+				// "-itsoffset", time, "-i", audioFile.getAbsolutePath(),
+				// "-map", "0:0", "-map", "1:1", "-vcodec", "copy", "-acodec",
+				// "libfaac", "-ar", "22050", "-ab", "64000", "-ac", "1",
+				// newFile.getAbsolutePath());
+			}
+			else
+			{ // must delay the video
+				// audioDelay *= -1;
+				String time = parseFFMPEGTime(audioDelay);
+				inputFFMPEG = new String[] { FFMPEG, "-i", audioFile.getAbsolutePath(), "-itsoffset", time, "-i",
+						videoFile.getAbsolutePath(), "-map", "1:0", "-map", "0:1" };
+				// p = new ProcessBuilder(FFMPEG, "-i", audioFile.getAbsolutePath(),
+				// "-itsoffset", time, "-i", videoFile.getAbsolutePath(),
+				// "-map", "1:0", "-map", "0:1", "-vcodec", "copy", "-acodec",
+				// "libfaac", "-ar", "22050", "-ab", "64000", "-ac", "1",
+				// newFile.getAbsolutePath());
+			}
 		}
 		p = new ProcessBuilder(concatenateArrays(inputFFMPEG, outputFFMPEG));
 		try
@@ -410,10 +429,18 @@ public class Application extends ApplicationAdapter
 			stream.close();
 			process.waitFor();
 			// Delete the original files
-			deleteFile(streamName + SUFFIX_AUDIO);
-			deleteFile(streamName + SUFFIX_VIDEO);
-			cancelDeleteTimer(streamName + SUFFIX_AUDIO);
-			cancelDeleteTimer(streamName + SUFFIX_VIDEO);
+			if (combined)
+			{
+				deleteFile(streamName + SUFFIX_COMBINED);
+				cancelDeleteTimer(streamName + SUFFIX_COMBINED);
+			}
+			else
+			{
+				deleteFile(streamName + SUFFIX_AUDIO);
+				deleteFile(streamName + SUFFIX_VIDEO);
+				cancelDeleteTimer(streamName + SUFFIX_AUDIO);
+				cancelDeleteTimer(streamName + SUFFIX_VIDEO);
+			}
 			// streamFileNames.put(streamName, newFile.getName());
 			// startDeleteTimer(streamName);
 
