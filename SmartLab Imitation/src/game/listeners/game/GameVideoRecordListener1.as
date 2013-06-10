@@ -21,6 +21,8 @@ package game.listeners.game
 
 	public class GameVideoRecordListener1 extends VideoPlaybackScreenListener
 	{
+		
+		private var audioDelay:Number = 0;
 		public function GameVideoRecordListener1(screen:Screen)
 		{
 			super(screen);

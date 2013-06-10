@@ -40,15 +40,19 @@ package recorder.listeners
 		private var startRecordingResponder:Responder;
 		private var stopRecordingCameraResponder:Responder;
 		private var stopRecordingAudioResponder:Responder;
+		private var stopRecordingCombinedResponder:Responder;
 		private var transcodeVideoResponder:Responder;
 		private var camera:Camera;
 		private var microphone:Microphone;
 		private var cameraNetStream:NetStream;
 		private var audioNetStream:NetStream;
-		private var previewNetStream:NetStream;
+		private var combinedNetStream:NetStream;
 		private var streamName:String;
 		private var flushTimerCamera:Timer;
 		private var flushTimerAudio:Timer;
+		
+		private var flushTimerCombined:Timer;
+		
 		private var cameraRecording:Boolean;
 		private var audioRecording:Boolean;
 		private var streamNameResponder:Responder;
@@ -61,12 +65,17 @@ package recorder.listeners
 		private var doneRecording:Boolean;
 		private var urlLoader:URLLoader;
 		private var totalBytesForUploading:Number;
+		
+		private var _audioDelay:Number = 0;
+		
 		private const DELETE_TIMER_DELAY:Number = 5 * 60 * 1000; //5 minutes
 		private const RECORDING_CAMERA:int = 1;
 		private const RECORDING_AUDIO:int = 0;
 		private const RECORDING_COMBINED:int = 2;
 		private const SUFFIX_AUDIO:String = "_audio";
 		private const SUFFIX_CAMERA:String = "_video";
+		private const SUFFIX_COMBINED:String = "_combined";
+		
 		public const STREAMS_DIRECTORY:String = "http://imdc.ca/~martin/smartlab/streams/";
 		
 		public function CameraControlsListener(nc:NetConnection)
@@ -75,6 +84,7 @@ package recorder.listeners
 			startRecordingResponder = new Responder(startRecordingSuccess, startStopRecordingFailure);
 			stopRecordingCameraResponder = new Responder(stopRecordingCameraSuccess, startStopRecordingFailure);
 			stopRecordingAudioResponder = new Responder(stopRecordingAudioSuccess, startStopRecordingFailure);
+			stopRecordingCombinedResponder = new Responder(stopRecordingCombinedSuccess, startStopRecordingFailure);
 			streamNameResponder = new Responder(streamNameResult, streamNameStatus);
 			transcodeVideoResponder = new Responder(transcodeVideoSuccess, transcodeVideoFailure);
 			cameraRecording = false;
@@ -82,6 +92,16 @@ package recorder.listeners
 			doneRecording = true;
 		}
 		
+		public function get audioDelay():Number
+		{
+			return _audioDelay;
+		}
+
+		public function set audioDelay(value:Number):void
+		{
+			_audioDelay = value;
+		}
+
 		public function get resultingVideoFile():String
 		{
 			return _resultingVideoFile;
@@ -101,20 +121,45 @@ package recorder.listeners
 			if (audioNetStream==null)
 			{
 				audioNetStream = CameraMicSource.getInstance().getAudioStream(netConnection);
+				audioNetStream.close();
+				audioNetStream = null;
 			}
+			combinedNetStream = cameraNetStream;
+			
+			combinedNetStream.attachAudio(CameraMicSource.getInstance().microphone);
 //			netStream.bufferTime = 60;
 			var h264Settings:H264VideoStreamSettings = new H264VideoStreamSettings();
 			h264Settings.setProfileLevel(H264Profile.MAIN, H264Level.LEVEL_3);
 			h264Settings.setQuality(0, 100);
 			
-			cameraNetStream.videoStreamSettings = h264Settings;
 			
-			cameraNetStream.addEventListener(NetStatusEvent.NET_STATUS, onCameraRecStreamStatus);
+			combinedNetStream.videoStreamSettings = h264Settings;
+			combinedNetStream.addEventListener(NetStatusEvent.NET_STATUS, onCombinedRecStreamStatus);
 			
-			audioNetStream.addEventListener(NetStatusEvent.NET_STATUS, onAudioRecStreamStatus);
+//			cameraNetStream.videoStreamSettings = h264Settings;
+//			
+//			cameraNetStream.addEventListener(NetStatusEvent.NET_STATUS, onCameraRecStreamStatus);
+//			
+//			audioNetStream.addEventListener(NetStatusEvent.NET_STATUS, onAudioRecStreamStatus);
 			
 			netConnection.call("generateStream", streamNameResponder);
 		}
+		
+		private function onCombinedRecStreamStatus(event:NetStatusEvent):void
+		{
+			trace ("VIDEO: " + event.info.code);
+			if ( event.info.code == "NetStream.Publish.Start" )
+			{
+				cameraRecording = true;
+				audioRecording = true;
+				netConnection.call("record", startRecordingResponder, streamName, RECORDING_COMBINED);
+				recordingCameraStartTime = new Date().time;
+				//				recordingTimer = new Timer(200, 0);
+				//				recordingTimer.addEventListener(TimerEvent.TIMER, updateTime);
+				//				recordingTimer.start();
+			}
+		}
+		
 		
 		private function onCameraRecStreamStatus(event:NetStatusEvent):void
 		{
@@ -153,25 +198,60 @@ package recorder.listeners
 //			recordingTimer.stop();
 //			recordingTimer = null;
 			
-			totalBytesForUploading = cameraNetStream.bufferLength + audioNetStream.bufferLength;
+//			totalBytesForUploading = cameraNetStream.bufferLength + audioNetStream.bufferLength;
+			totalBytesForUploading = combinedNetStream.bufferLength;
 			
-			flushTimerCamera = new Timer(100, 0);
-			flushTimerCamera.addEventListener(TimerEvent.TIMER, bufferCheckerCamera);
-			flushTimerCamera.start();
 			
-			flushTimerAudio = new Timer(100, 0);
-			flushTimerAudio.addEventListener(TimerEvent.TIMER, bufferCheckerAudio);
-			flushTimerAudio.start();
+			flushTimerCombined = new Timer(100, 0);
+			flushTimerCombined.addEventListener(TimerEvent.TIMER, bufferCheckerCombined);
+			flushTimerCombined.start();
 			
-			cameraNetStream.pause();
-			cameraNetStream.attachCamera(null);
-			cameraNetStream.attachAudio(null);
+//			flushTimerCamera = new Timer(100, 0);
+//			flushTimerCamera.addEventListener(TimerEvent.TIMER, bufferCheckerCamera);
+//			flushTimerCamera.start();
+//			
+//			flushTimerAudio = new Timer(100, 0);
+//			flushTimerAudio.addEventListener(TimerEvent.TIMER, bufferCheckerAudio);
+//			flushTimerAudio.start();
 			
-			audioNetStream.pause();
-			audioNetStream.attachCamera(null);
-			audioNetStream.attachAudio(null);
+			combinedNetStream.pause();
+			combinedNetStream.attachCamera(null);
+			combinedNetStream.attachAudio(null);
+//			cameraNetStream.pause();
+//			cameraNetStream.attachCamera(null);
+//			cameraNetStream.attachAudio(null);
+//			
+//			audioNetStream.pause();
+//			audioNetStream.attachCamera(null);
+//			audioNetStream.attachAudio(null);
 			
 			Main.appendMessage("Recording stopped. Video is uploading...");
+		}
+		
+		private function bufferCheckerCombined(event:TimerEvent):void
+		{
+			if (combinedNetStream.bufferLength == 0)
+			{
+				trace("Buffer cleared");
+				flushTimerCombined.stop();
+				flushTimerCombined = null;
+				
+				netConnection.call("stopRecording", stopRecordingCombinedResponder, streamName, RECORDING_COMBINED);
+				combinedNetStream.close();
+				combinedNetStream = null;
+				//See startStopRecordingSuccess for enabling buttons etc.
+				
+				//				(CameraControlsPanel)(event.target).setRecordingButtonEnabled(true);
+				
+			}
+			else
+			{
+				var remainingBytesForUploading:Number;
+				remainingBytesForUploading = combinedNetStream.bufferLength;
+				uploadProgressText(""+Math.round((totalBytesForUploading - remainingBytesForUploading)/totalBytesForUploading * 100));
+				
+				var percentDone:Number = Math.round((totalBytesForUploading - remainingBytesForUploading)/totalBytesForUploading * 100);
+			}
 		}
 		
 		private function bufferCheckerCamera(event:TimerEvent):void
@@ -239,9 +319,9 @@ package recorder.listeners
 			//FIXME gives the same name except for the last part which is generated on the server :(
 			streamName = obj.toString();
 			
-			cameraNetStream.publish(streamName+SUFFIX_CAMERA, "live");
-			audioNetStream.publish(streamName+SUFFIX_AUDIO, "live");
-			
+//			cameraNetStream.publish(streamName+SUFFIX_CAMERA, "live");
+//			audioNetStream.publish(streamName+SUFFIX_AUDIO, "live");
+			combinedNetStream.publish(streamName+SUFFIX_COMBINED, "live");
 			//	Main.appendMessage("Recording started to file: "+obj.toString()+".flv");
 //			}
 			trace("Result is:"+obj);
@@ -267,6 +347,22 @@ package recorder.listeners
 				dispatchEvent(event);
 //				ExternalInterface.call(Main.configurationVariables["jsObj"]+"."+Main.configurationVariables["recordingStartedCallback"]);
 			}
+			
+		}
+		
+		private function stopRecordingCombinedSuccess(obj:Object):void
+		{
+			cameraRecording = false;
+			audioRecording = false;
+			//recording stopped - returns filename of recording
+			realFileNameVideo = obj.toString();
+			trace("Recording stopped");
+			//Enable the buttons
+			Main.appendMessage("Video Uploading finished.");
+			
+			trace("StopRecordingCombined Success:"+obj);
+			var event:RecordingEvent = new RecordingEvent(RecordingEvent.EVENT_RECORDING_STOPPED);
+			dispatchEvent(event);
 			
 		}
 		
@@ -323,8 +419,9 @@ package recorder.listeners
 //			setBlur(true);
 			//Only use mp4 as video codec
 			var supportedVideoType:String = "mp4";
-			var audioDelay:Number = recordingCameraStartTime - recordingAudioStartTime;
-			netConnection.call("transcodeVideo",transcodeVideoResponder, streamName, audioDelay, supportedVideoType, ""+participantID, "" + day, ""+videoNumber,""+numberOfTries);	
+//			audioDelay = recordingCameraStartTime - recordingAudioStartTime;
+			audioDelay = 0;
+			netConnection.call("transcodeVideo",transcodeVideoResponder, streamName, audioDelay, supportedVideoType, ""+participantID, "" + day, ""+videoNumber,""+numberOfTries, true);	
 		}
 		
 		private function startStopRecordingFailure(obj:Object):void

@@ -70,6 +70,7 @@ package game.listeners.game
 		private function startPlayback():void
 		{
 			Main.appendMessage("Playback Started");
+//			Main.appendMessage("Audio Delay: " + Main.instance.cameraControlsListener.audioDelay);
 			Main.instance.setLoadingLabelVisible(false);
 			(screen as VideoPerformancePlaybackScreen).videoPlayer2.resume();
 			recordingTimer = new Timer(300, 1);

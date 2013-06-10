@@ -407,7 +407,7 @@ package
 			netConnection.addEventListener(NetStatusEvent.NET_STATUS, netStatus);
 			
 			//connect to red5
-			netConnection.connect("rtmp://imdc.ca//smartLabProject", true);
+			netConnection.connect("rtmp://imdc.ca//smartLabProject1", true);
 		}
 
 		public function setup():void
