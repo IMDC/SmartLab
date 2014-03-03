@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.ApplicationAdapter;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.stream.ClientBroadcastStream;
 import org.slf4j.Logger;
 
@@ -359,6 +359,7 @@ public class Application extends ApplicationAdapter
 	public String transcodeVideo(String streamName, long audioDelay, String type, String participantId, String day,
 			String video, String video_trial, boolean combined)
 	{
+//		boolean combined = true;
 		String fileName = null;
 		// FIXME make it so that it can work if I am recording only audio or
 		// only video
@@ -436,10 +437,10 @@ public class Application extends ApplicationAdapter
 			}
 			else
 			{
-				deleteFile(streamName + SUFFIX_AUDIO);
-				deleteFile(streamName + SUFFIX_VIDEO);
-				cancelDeleteTimer(streamName + SUFFIX_AUDIO);
-				cancelDeleteTimer(streamName + SUFFIX_VIDEO);
+//				deleteFile(streamName + SUFFIX_AUDIO);
+//				deleteFile(streamName + SUFFIX_VIDEO);
+//				cancelDeleteTimer(streamName + SUFFIX_AUDIO);
+//				cancelDeleteTimer(streamName + SUFFIX_VIDEO);
 			}
 			// streamFileNames.put(streamName, newFile.getName());
 			// startDeleteTimer(streamName);

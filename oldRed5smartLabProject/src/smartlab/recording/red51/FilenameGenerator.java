@@ -1,8 +1,9 @@
 package smartlab.recording.red51;
 
-import org.red5.server.api.IScope;
-import org.red5.server.api.ScopeUtils;
+import org.red5.server.api.scope.IScope;
 import org.red5.server.api.stream.IStreamFilenameGenerator;
+import org.red5.server.util.ScopeUtils;
+
 
 public class FilenameGenerator implements IStreamFilenameGenerator {
 
