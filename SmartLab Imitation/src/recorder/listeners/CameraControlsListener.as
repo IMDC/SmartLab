@@ -118,15 +118,15 @@ package recorder.listeners
 			{
 				cameraNetStream = CameraMicSource.getInstance().getCameraStream(netConnection);
 			}
-			if (audioNetStream==null)
-			{
-				audioNetStream = CameraMicSource.getInstance().getAudioStream(netConnection);
-				audioNetStream.close();
-				audioNetStream = null;
-			}
+//			if (audioNetStream==null)
+//			{
+//				audioNetStream = CameraMicSource.getInstance().getAudioStream(netConnection);
+//				audioNetStream.close();
+//				audioNetStream = null;
+//			}
 			combinedNetStream = cameraNetStream;
 			
-			combinedNetStream.attachAudio(CameraMicSource.getInstance().microphone);
+//			combinedNetStream.attachAudio(CameraMicSource.getInstance().microphone);
 //			netStream.bufferTime = 60;
 			var h264Settings:H264VideoStreamSettings = new H264VideoStreamSettings();
 			h264Settings.setProfileLevel(H264Profile.MAIN, H264Level.LEVEL_3);

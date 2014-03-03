@@ -305,6 +305,7 @@ package recorder.model
 			{
 				cameraStream = new NetStream(connection)
 				cameraStream.attachCamera(camera);
+				cameraStream.attachAudio(microphone);
 			}
 			else
 			{
@@ -312,6 +313,7 @@ package recorder.model
 				{
 					cameraStreamCleared = false;
 					cameraStream.attachCamera(camera);
+					cameraStream.attachAudio(microphone);
 				}
 			}
 			cameraStream.bufferTime = 60;
